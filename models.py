@@ -102,13 +102,16 @@ class Movie(db.Model):
 
     def format(self):
         return {
-          'id': self.id,
-          'title': self.title,
-          'release_date': self.release_date,
-          'genre': self.genre,
-          'actors': [i.name for i in self.Actors]
+            'id': self.id,
+            'title': self.title,
+            'release_date': self.release_date,
+            'genre': self.genre,
+            'actors': [i.name for i in self.Actors]
         }
-
+    def short(self):
+        return {
+            'title': self.title
+        }
 class Actor(db.Model):
     __tablename__ = 'Actors'
 
@@ -135,9 +138,13 @@ class Actor(db.Model):
 
     def format(self):
         return {
-          'id': self.id,
-          'name': self.name,
-          'gender': self.gender,
-          'age': self.age,
-          'movies': [i.name for i in self.movies]
-          }
+            'id': self.id,
+            'name': self.name,
+            'gender': self.gender,
+            'age': self.age,
+            'movies': [i.name for i in self.movies]
+        }
+    def short(self):
+        return {
+            'name': self.name
+        }
