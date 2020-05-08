@@ -4,8 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 import json
 
 database_name = 'capstone'
-# database_path = "postgres://{}/{}".format('localhost:5432', database_name)
-database_path = os.environ['DATABASE_URL']
+database_path = 'postgres://postgres@localhost:5432/capstone'
+# database_path = os.environ['DATABASE_URL']
 db = SQLAlchemy()
 
 def setup_db(app, database_path=database_path):
@@ -28,42 +28,36 @@ def db_drop_and_create_all():
 
 def db_init_records():
 
-    new_actor1 = (Actor(
-                        id = 1,
+    new_actor1 = Actor(
                         name = 'John Doe',
                         gender = 'Male',
                         age = '32'
-                        ))
-    new_actor2 = (Actor(
-                        id = 2,
+                        )
+    new_actor2 = Actor(
                         name = 'Jane Doe',
                         gender = 'Female',
                         age = '32'
-                        ))
-    new_actor3 = (Actor(
-                        id = 3,
+                        )
+    new_actor3 = Actor(
                         name = 'Joe Shmoe',
                         gender = 'Male',
                         age = '50'
-                        ))
-    new_movie1 = (Movie(
-                        id = 1,
+                        )
+    new_movie1 = Movie(
                         title = 'Two people have an argument',
                         release_date = '5/1/2020',
                         genre = 'Drama'
-                        ))
-    new_movie2 = (Movie(
-                        id = 2,
+                        )
+    new_movie2 = Movie(
                         title = 'Two people fall in love',
                         release_date = '5/1/2020',
                         genre = 'Romance'
-                        ))
-    new_movie3 = (Movie(
-                        id = 3,
+                        )
+    new_movie3 = Movie(
                         title = 'A guy kills two people',
                         release_date = '5/1/2020',
                         genre = 'Horror'
-                        ))
+                        )
     new_actor1.insert()
     new_actor2.insert()
     new_actor3.insert()
@@ -86,14 +80,14 @@ class Movie(db.Model):
     release_date = Column(String)
     genre = Column(String)
     actors = db.relationship(
-        'Actors',
+        'Actor',
         secondary=cast,
         backref=db.backref('Movies', lazy=True))
 
-    def __init__(self, length, genre, name):
-        self.length = length
+    def __init__(self, title, release_date, genre):
+        self.title = title
+        self.release_date = release_date
         self.genre = genre
-        self.name = name
 
     def insert(self):
         db.session.add(self)
@@ -123,7 +117,7 @@ class Actor(db.Model):
     gender = Column(String, nullable=False)
     age = Column(Integer, nullable=False)
 
-    def __init__(self, name, gender, age, email):
+    def __init__(self, name, gender, age):
         self.name = name
         self.gender = gender
         self.age = age
