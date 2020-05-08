@@ -1,26 +1,149 @@
 import os
-from sqlalchemy import Column, String, create_engine
+from sqlalchemy import Column, String, Integer, create_engine
 from flask_sqlalchemy import SQLAlchemy
 import json
-database_name = 'capstone'
-user_name = "postgres"
-password = "postgres"
-database_path = "postgres://{}:{}@{}/{}".format(
-  user_name,
-  password,
-  'localhost:5432',
-  database_name)
-# database_path = os.environ['DATABASE_URL']
 
+database_name = 'capstone'
+# database_path = "postgres://{}/{}".format('localhost:5432', database_name)
+database_path = os.environ['DATABASE_URL']
 db = SQLAlchemy()
 
-'''
-setup_db(app)
-    binds a flask application and a SQLAlchemy service
-'''
 def setup_db(app, database_path=database_path):
     app.config["SQLALCHEMY_DATABASE_URI"] = database_path
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.app = app
     db.init_app(app)
+    db_drop_and_create_all()
+
+cast = db.Table('cast',
+    db.Column('movie_id', db.Integer,
+            db.ForeignKey('Movies.id'), primary_key=True),
+    db.Column('actor_id', db.Integer,
+            db.ForeignKey('Actors.id'), primary_key=True))
+
+def db_drop_and_create_all():
+    db.drop_all()
     db.create_all()
+    db_init_records()
+
+def db_init_records():
+
+    new_actor1 = (Actor(
+                        id = 1,
+                        name = 'John Doe',
+                        gender = 'Male',
+                        age = '32'
+                        ))
+    new_actor2 = (Actor(
+                        id = 2,
+                        name = 'Jane Doe',
+                        gender = 'Female',
+                        age = '32'
+                        ))
+    new_actor3 = (Actor(
+                        id = 3,
+                        name = 'Joe Shmoe',
+                        gender = 'Male',
+                        age = '50'
+                        ))
+    new_movie1 = (Movie(
+                        id = 1,
+                        title = 'Two people have an argument',
+                        release_date = '5/1/2020',
+                        genre = 'Drama'
+                        ))
+    new_movie2 = (Movie(
+                        id = 2,
+                        title = 'Two people fall in love',
+                        release_date = '5/1/2020',
+                        genre = 'Romance'
+                        ))
+    new_movie3 = (Movie(
+                        id = 3,
+                        title = 'A guy kills two people',
+                        release_date = '5/1/2020',
+                        genre = 'Horror'
+                        ))
+    new_actor1.insert()
+    new_actor2.insert()
+    new_actor3.insert()
+    new_movie1.actors.append(new_actor1)
+    new_movie1.actors.append(new_actor2)
+    new_movie2.actors.append(new_actor1)
+    new_movie2.actors.append(new_actor2)
+    new_movie3.actors.append(new_actor1)
+    new_movie3.actors.append(new_actor2)
+    new_movie3.actors.append(new_actor3)
+    new_movie1.insert()
+    new_movie2.insert()
+    new_movie3.insert()
+
+class Movie(db.Model):
+    __tablename__ = 'Movies'
+
+    id = Column(Integer, primary_key=True)
+    title = Column(String, nullable=False)
+    release_date = Column(String)
+    genre = Column(String)
+    actors = db.relationship(
+        'Actors',
+        secondary=cast,
+        backref=db.backref('Movies', lazy=True))
+
+    def __init__(self, length, genre, name):
+        self.length = length
+        self.genre = genre
+        self.name = name
+
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def update(self):
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    def format(self):
+        return {
+          'id': self.id,
+          'title': self.title,
+          'release_date': self.release_date,
+          'genre': self.genre,
+          'actors': [i.name for i in self.Actors]
+        }
+
+class Actor(db.Model):
+    __tablename__ = 'Actors'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    gender = Column(String, nullable=False)
+    age = Column(Integer, nullable=False)
+
+    def __init__(self, name, gender, age, email):
+        self.name = name
+        self.gender = gender
+        self.age = age
+
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def update(self):
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    def format(self):
+        return {
+          'id': self.id,
+          'name': self.name,
+          'gender': self.gender,
+          'age': self.age,
+          'movies': [i.name for i in self.movies]
+          }
