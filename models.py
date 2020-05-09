@@ -106,7 +106,7 @@ class Movie(db.Model):
             'title': self.title,
             'release_date': self.release_date,
             'genre': self.genre,
-            'actors': [i.name for i in self.Actors]
+            'actors': [i.name for i in self.actors]
         }
     def short(self):
         return {
@@ -119,11 +119,16 @@ class Actor(db.Model):
     name = Column(String, nullable=False)
     gender = Column(String, nullable=False)
     age = Column(Integer, nullable=False)
+    movies = db.relationship(
+      'Movie',
+      secondary=cast,
+      backref=db.backref('Actors', lazy=True))
 
     def __init__(self, name, gender, age):
         self.name = name
         self.gender = gender
         self.age = age
+
 
     def insert(self):
         db.session.add(self)
@@ -142,7 +147,7 @@ class Actor(db.Model):
             'name': self.name,
             'gender': self.gender,
             'age': self.age,
-            'movies': [i.name for i in self.movies]
+            # 'movies': [i.title for i in self.movies]
         }
     def short(self):
         return {
