@@ -2,6 +2,7 @@ import os
 from sqlalchemy import Column, String, Integer, create_engine
 from flask_sqlalchemy import SQLAlchemy
 import json
+from flask_migrate import Migrate, MigrateCommand
 
 # database_name = 'capstone'
 # database_path = 'postgres://postgres@localhost:5432/capstone'
@@ -15,6 +16,7 @@ def setup_db(app, database_path=database_path):
     db.app = app
     db.init_app(app)
     db_drop_and_create_all()
+    migrate = Migrate(app, db)
 
 
 cast = db.Table('cast',
@@ -166,3 +168,15 @@ class Actor(db.Model):
         return {
             'name': self.name
         }
+
+cast = db.Table('cast',
+                db.Column(
+                    'movie_id',
+                    db.Integer,
+                    db.ForeignKey('Movies.id'),
+                    primary_key=True),
+                db.Column(
+                    'actor_id',
+                    db.Integer,
+                    db.ForeignKey('Actors.id'),
+                    primary_key=True))
