@@ -18,20 +18,6 @@ def setup_db(app, database_path=database_path):
     db_drop_and_create_all()
     migrate = Migrate(app, db)
 
-
-cast = db.Table('cast',
-                db.Column(
-                    'movie_id',
-                    db.Integer,
-                    db.ForeignKey('Movies.id'),
-                    primary_key=True),
-                db.Column(
-                    'actor_id',
-                    db.Integer,
-                    db.ForeignKey('Actors.id'),
-                    primary_key=True))
-
-
 def db_drop_and_create_all():
     db.drop_all()
     db.create_all()
