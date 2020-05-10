@@ -112,7 +112,6 @@ def create_app(test_config=None):
             actor.update()
             result = {
                 'success': True,
-                'actor': Actor.format(actor)
                 }
             return jsonify(result)
         except Exception:
@@ -128,7 +127,7 @@ def create_app(test_config=None):
         try:
             data = request.get_json()
             if 'actors' in data:
-                movie.actors.append(data['actors'])
+                movie.actors = data['actors']
             if 'title' in data:
                 movie.name = data['title']
             if 'release_date' in data:
@@ -138,7 +137,6 @@ def create_app(test_config=None):
             movie.update()
             result = {
                 'success': True,
-                'movie': Movie.format(movie)
                 }
             return jsonify(result)
         except Exception:
