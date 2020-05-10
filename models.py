@@ -69,6 +69,17 @@ def db_init_records():
     new_movie2.insert()
     new_movie3.insert()
 
+cast = db.Table('cast',
+                db.Column(
+                    'movie_id',
+                    db.Integer,
+                    db.ForeignKey('Movies.id'),
+                    primary_key=True),
+                db.Column(
+                    'actor_id',
+                    db.Integer,
+                    db.ForeignKey('Actors.id'),
+                    primary_key=True))
 
 class Movie(db.Model):
     __tablename__ = 'Movies'
@@ -120,10 +131,10 @@ class Actor(db.Model):
     name = Column(String, nullable=False)
     gender = Column(String, nullable=False)
     age = Column(Integer, nullable=False)
-    movies = db.relationship(
-      'Movie',
-      secondary=cast,
-      backref=db.backref('Actors', lazy=True))
+    # movies = db.relationship(
+    #   'Movie',
+    #   secondary=cast,
+    #   backref=db.backref('Actors', lazy=True))
 
     def __init__(self, name, gender, age):
         self.name = name
@@ -154,15 +165,3 @@ class Actor(db.Model):
         return {
             'name': self.name
         }
-
-cast = db.Table('cast',
-                db.Column(
-                    'movie_id',
-                    db.Integer,
-                    db.ForeignKey('Movies.id'),
-                    primary_key=True),
-                db.Column(
-                    'actor_id',
-                    db.Integer,
-                    db.ForeignKey('Actors.id'),
-                    primary_key=True))
