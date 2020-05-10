@@ -101,19 +101,23 @@ def create_app(test_config=None):
         actor = Actor.query.filter(Actor.id == id).one_or_none()
         if actor is None:
             abort(404)
-        data = request.get_json()
-        if 'name' in data:
-            actor.name = data['name']
-        if 'gender' in data:
-            actor.gender = data['gender']
-        if 'age' in data:
-            actor.age = data['age']
-        actor.update()
-        result = {
-            'success': True,
-            'actor': Actor.format(actor)
-            }
-        return jsonify(result)
+        try:
+            data = request.get_json()
+            if 'name' in data:
+                actor.name = data['name']
+            if 'gender' in data:
+                actor.gender = data['gender']
+            if 'age' in data:
+                actor.age = data['age']
+            actor.update()
+            result = {
+                'success': True,
+                'actor': Actor.format(actor)
+                }
+            return jsonify(result)
+        except Exception:
+            print(sys.exc_info())
+            abort(422)
 
     @app.route('/movies/<int:id>', methods=['PATCH'])
     @requires_auth('patch:movies')
@@ -121,19 +125,25 @@ def create_app(test_config=None):
         movie = Movie.query.filter(Movie.id == id).one_or_none()
         if movie is None:
             abort(404)
-        data = request.get_json()
-        if 'title' in data:
-            movie.name = data['title']
-        if 'release_date' in data:
-            movie.release_date = data['release_date']
-        if 'genre' in data:
-            movie.genre = data['genre']
-        movie.update()
-        result = {
-            'success': True,
-            'movie': Movie.format(movie)
-            }
-        return jsonify(result)
+        try:
+            data = request.get_json()
+            if 'actors' in data:
+                movie.actors.append(actors)
+            if 'title' in data:
+                movie.name = data['title']
+            if 'release_date' in data:
+                movie.release_date = data['release_date']
+            if 'genre' in data:
+                movie.genre = data['genre']
+            movie.update()
+            result = {
+                'success': True,
+                'movie': Movie.format(movie)
+                }
+            return jsonify(result)
+        except Exception:
+            print(sys.exc_info())
+            abort(422)
 
     @app.route('/actors/<int:id>', methods=['DELETE'])
     @requires_auth('delete:actors')
