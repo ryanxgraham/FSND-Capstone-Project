@@ -26,7 +26,7 @@ def create_app(test_config=None):
     @app.route('/actors', methods=['GET'])
     @requires_auth('get:actors')
     def get_actors(payload):
-        actors = list(map(Actor.format, Actor.query.all()))
+        actors = list(map(Actor.format, Actor.query.order_by(Actor.id).all()))
         if actors is None:
             abort(404)
         result = {
@@ -38,7 +38,7 @@ def create_app(test_config=None):
     @app.route('/movies', methods=['GET'])
     @requires_auth('get:movies')
     def get_movies(payload):
-        movies = list(map(Movie.format, Movie.query.all()))
+        movies = list(map(Movie.format, Movie.query.order_by(Movie.id).all()))
         if movies is None:
             abort(404)
         result = {
@@ -128,7 +128,7 @@ def create_app(test_config=None):
         try:
             data = request.get_json()
             if 'actors' in data:
-                movie.actors.append(actors)
+                movie.actors.append(data['actors'])
             if 'title' in data:
                 movie.name = data['title']
             if 'release_date' in data:
