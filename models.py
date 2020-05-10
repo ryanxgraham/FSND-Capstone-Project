@@ -153,7 +153,7 @@ class Actor(db.Model):
             'name': self.name,
             'gender': self.gender,
             'age': self.age,
-            'movies': [i.title for i in self.movies]
+            # 'movies': [i.title for i in self.movies]
         }
 
     def short(self):

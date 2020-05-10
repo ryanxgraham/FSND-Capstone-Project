@@ -27,6 +27,8 @@ def create_app(test_config=None):
     @requires_auth('get:actors')
     def get_actors(payload):
         actors = list(map(Actor.format, Actor.query.all()))
+        if actors is None:
+            abort(404)
         result = {
             'success': True,
             'actors': actors
@@ -37,6 +39,8 @@ def create_app(test_config=None):
     @requires_auth('get:movies')
     def get_movies(payload):
         movies = list(map(Movie.format, Movie.query.all()))
+        if movies is None:
+            abort(404)
         result = {
             'success': True,
             'movies': movies
