@@ -1,4 +1,4 @@
-"""TESTING SUITE FOR TRIVIA API."""
+"""TESTING SUITE FOR CAPSTONE API."""
 import os
 import unittest
 import json
