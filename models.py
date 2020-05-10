@@ -15,14 +15,9 @@ def setup_db(app, database_path=database_path):
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.app = app
     db.init_app(app)
-    db_drop_and_create_all()
-    migrate = Migrate(app, db)
-
-def db_drop_and_create_all():
-    db.drop_all()
-    db.create_all()
+    create_all()
     db_init_records()
-
+    migrate = Migrate(app, db)
 
 def db_init_records():
     new_actor1 = Actor(
