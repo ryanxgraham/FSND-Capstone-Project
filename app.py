@@ -111,7 +111,7 @@ def create_app(test_config=None):
         actor.update()
         result = {
             'success': True,
-            'actor': Actor.format(patch_actor)
+            'actor': Actor.format(actor)
             }
         return jsonify(result)
 
@@ -131,7 +131,7 @@ def create_app(test_config=None):
         movie.update()
         result = {
             'success': True,
-            'movie': Movie.format(patch_movie)
+            'movie': Movie.format(movie)
             }
         return jsonify(result)
 
