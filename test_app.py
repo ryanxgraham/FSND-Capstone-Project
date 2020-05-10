@@ -46,17 +46,18 @@ class CapstoneTestCase(unittest.TestCase):
             'genre': 'genre',
         }
         self.test_movie_fail = {
-            'title':False,
+            'title': False,
             'release_date': False,
             'genre': False,
         }
+
     def tearDown(self):
-        """Execute after each test."""
-        pass
+        with self.app.app_context():
+            self.db = SQLAlchemy()
+            self.db.drop_all()
+            """Execute after each test."""
 
-
-
-### /actors tests
+# /actors tests
 # / GET
     def test_get_actors(self):
         res = self.client().get('/actors', headers={
@@ -82,8 +83,12 @@ class CapstoneTestCase(unittest.TestCase):
 # # / POST
     def test_post_actor_success(self):
 
-        res = self.client().post('/actors', json=self.test_actor_success, headers={
-            "Authorization": 'bearer '+self.token_director})
+        res = self.client().post('/actors',
+                                 json=self.test_actor_success,
+                                 headers={
+                                          "Authorization": 'bearer '
+                                          + self.token_director
+                                          })
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
@@ -91,11 +96,14 @@ class CapstoneTestCase(unittest.TestCase):
         self.assertTrue(data['actor_created'])
         self.assertTrue(data['created'])
 
-
     def test_post_actors_bad_data(self):
         try:
-            res = self.client().post('/actors', json=self.test_actor_fail, headers={
-                "Authorization": 'bearer '+self.token_director})
+            res = self.client().post('/actors',
+                                     json=self.test_actor_fail,
+                                     headers={
+                                              "Authorization": 'bearer '
+                                              + self.token_director
+                                              })
             data = json.loads(res.data)
         except Exception:
             print(sys.exc_info())
@@ -103,69 +111,109 @@ class CapstoneTestCase(unittest.TestCase):
             self.assertEqual(data['success'], False)
 
     def test_post_actor_bad_auth(self):
-        res = self.client().post('/actors', json=self.test_actor_success, headers={
+        res = self.client().post('/actors',
+                                 json=self.test_actor_success,
+                                 headers={
+                                          "Authorization": 'bearer '
+                                          + self.token_assistant
+                                          })
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data['success'], False)
+
+# # /PATCH
+    def test_patch_actor_success(self):
+        try:
+            res = self.client().patch('/actors/1',
+                                      json={
+                                            "name": "name",
+                                            "gender": "gender",
+                                            "age": 30,
+                                            },
+                                      headers={
+                                            "Authorization": 'bearer '
+                                            + self.token_director
+                                            })
+            data = json.loads(res.data)
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(data['success'], True)
+        except Exception:
+            self.assertEqual(res.status_code, 404)
+            self.assertEqual(data['success'], False)
+
+    def test_patch_actor_bad_data(self):
+        try:
+            res = self.client().patch('/actors/1',
+                                      json={
+                                            'car': 'toyota'
+                                            },
+                                      headers={
+                                            "Authorization": 'bearer '
+                                            + self.token_director
+                                            })
+            data = json.loads(res.data)
+            self.assertEqual(res.status_code, 422)
+            self.assertEqual(data['success'], False)
+        except Exception:
+            self.assertEqual(res.status_code, 404)
+            self.assertEqual(data['success'], False)
+
+    def test_patch__nonexistant_actor(self):
+        res = self.client().patch('/actors/666',
+                                  json={
+                                        'name': 'patch'
+                                        },
+                                  headers={
+                                        "Authorization": 'bearer '
+                                        + self.token_director
+                                        })
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], False)
+
+    def test_patch_actor_bad_auth(self):
+        res = self.client().patch('/actors/1',
+                                  json={
+                                        'name': 'patch'
+                                        },
+                                  headers={
+                                        "Authorization": 'bearer '
+                                        + self.token_assistant
+                                        })
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data['success'], False)
+
+# # / DELETE
+
+    def test_delete_actor_success(self):
+        try:
+            res = self.client().delete('/actors/1', headers={
+                "Authorization": 'bearer '+self.token_director})
+            data = json.loads(res.data)
+            actor = Actor.query.filter_by(id=1).one_or_none()
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(data['success'], True)
+            self.assertEqual(actor, None)
+        except Exception:
+            self.assertEqual(res.status_code, 404)
+            self.assertEqual(data['success'], False)
+
+    def test_delete_nonexistant_actor(self):
+        res = self.client().delete('/actors/666', headers={
+            "Authorization": 'bearer '+self.token_director})
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], False)
+
+    def test_delete_actor_bad_auth(self):
+        res = self.client().delete('/actors/1', headers={
             "Authorization": 'bearer '+self.token_assistant})
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 401)
         self.assertEqual(data['success'], False)
 
-
-# # /PATCH
-    def test_patch_actor_success(self):
-        res = self.client().patch('/actors/1', json={
-            "name": "name",
-            "gender": "gender",
-            "age": 30,
-        }, headers={
-            "Authorization": 'bearer '+self.token_director})
-        data = json.loads(res.data)
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['success'], True)
-#
-#     def test_patch_actor_bad_data(self):
-#         res = self.client().patch('/actors/1', json={'car': 'toyota'}, headers={
-#             "Authorization": 'bearer '+self.token_director})
-#         data = json.loads(res.data)
-#         self.assertEqual(res.status_code, 422)
-#         self.assertEqual(data['success'], False)
-#
-#     def test_patch__nonexistant_actor(self):
-#         res = self.client().patch('/actors/666', json={'name': 'patch'}, headers={
-#             "Authorization": 'bearer '+self.token_director})
-#         data = json.loads(res.data)
-#         self.assertEqual(res.status_code, 404)
-#         self.assertEqual(data['success'], False)
-#
-#     def test_patch_actor_bad_auth(self):
-#         res = self.client().patch('/actors/1', json={'name': 'patch'}, headers={
-#             "Authorization": 'bearer '+self.token_assistant})
-#         data = json.loads(res.data)
-#         self.assertEqual(res.status_code, 401)
-#         self.assertEqual(data['success'], False)
-# # / DELETE
-#     def test_delete_actor_success(self):
-#         res = self.client().delete('/actors/1', headers={
-#             "Authorization": 'bearer '+self.token_director})
-#         data = json.loads(res.data)
-#         actor = Actor.query.filter_by(id=1).one_or_none()
-#         self.assertEqual(res.status_code, 200)
-#         self.assertEqual(data['success'], True)
-#         self.assertEqual(actor, None)
-#
-#     def test_delete_nonexistant_actor(self):
-#         res = self.client().delete('/actors/666', headers={
-#             "Authorization": 'bearer '+self.token_director})
-#         data = json.loads(res.data)
-#         self.assertEqual(res.status_code, 422)
-#         self.assertEqual(data['success'], False)
-#
-#     def test_delete_actor_bad_auth(self):
-#         res = self.client().delete('/actors/1', headers={
-#             "Authorization": 'bearer '+self.token_assistant})
-#         data = json.loads(res.data)
-#         self.assertEqual(res.status_code, 401)
-#         self.assertEqual(data['success'], False)
-# ### /movie tests
+# /movie tests
 # # / GET
     def test_get_movies(self):
         res = self.client().get('/movies', headers={
@@ -188,9 +236,14 @@ class CapstoneTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 401)
         self.assertEqual(data['success'], False)
 # # / POST
+
     def test_post_movie_success(self):
-        res = self.client().post('/movies', json=self.test_movie_success, headers={
-            "Authorization": 'bearer '+self.token_producer})
+        res = self.client().post('/movies',
+                                 json=self.test_movie_success,
+                                 headers={
+                                        "Authorization": 'bearer '
+                                        + self.token_producer
+                                    })
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
@@ -200,8 +253,12 @@ class CapstoneTestCase(unittest.TestCase):
 
     def test_post_movies_bad_data(self):
         try:
-            res = self.client().post('/movies', json=self.test_movie_fail, headers={
-                "Authorization": 'bearer '+self.token_producer})
+            res = self.client().post('/movies',
+                                     json=self.test_movie_fail,
+                                     headers={
+                                            "Authorization": 'bearer '
+                                            + self.token_producer
+                                        })
             data = json.loads(res.data)
         except Exception:
             print(sys.exc_info())
@@ -209,62 +266,104 @@ class CapstoneTestCase(unittest.TestCase):
             self.assertEqual(data['success'], False)
 
     def test_post_movie_bad_auth(self):
-        res = self.client().post('/movies', json=self.test_movie_success, headers={
-            "Authorization": 'bearer '+self.token_director})
+        res = self.client().post('/movies',
+                                 json=self.test_movie_success,
+                                 headers={
+                                        "Authorization": 'bearer '
+                                        + self.token_director
+                                    })
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 401)
         self.assertEqual(data['success'], False)
 # # /PATCH
-    # def test_patch_movie_success(self):
-    #     res = self.client().patch('/movie/1', json={'title': 'patch'}, headers={
-    #         "Authorization": 'bearer '+self.token_director})
-    #     data = json.loads(res.data)
-    #     self.assertEqual(res.status_code, 200)
-    #     self.assertEqual(data['success'], True)
 
-#     def test_patch_movie_bad_data(self):
-#         res = self.client().patch('/movies/1', json={'car': 'toyota'}, headers={
-#             "Authorization": 'bearer '+self.token_director})
-#         data = json.loads(res.data)
-#         self.assertEqual(res.status_code, 422)
-#         self.assertEqual(data['success'], False)
-#
-#     def test_patch__nonexistant_movie(self):
-#         res = self.client().patch('/movies/666', json={'title': 'patch'}, headers={
-#             "Authorization": 'bearer '+self.token_director})
-#         data = json.loads(res.data)
-#         self.assertEqual(res.status_code, 404)
-#         self.assertEqual(data['success'], False)
-#
-#     def test_patch_movie_bad_auth(self):
-#         res = self.client().patch('/movies/1', json={'title': 'patch'}, headers={
-#             "Authorization": 'bearer '+self.token_assistant})
-#         data = json.loads(res.data)
-#         self.assertEqual(res.status_code, 401)
-#         self.assertEqual(data['success'], False)
+    def test_patch_movie_success(self):
+        try:
+            res = self.client().patch('/movie/1',
+                                      json={
+                                            'title': 'patch'
+                                        },
+                                      headers={
+                                            "Authorization": 'bearer '
+                                            + self.token_director
+                                        })
+            data = json.loads(res.data)
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(data['success'], True)
+        except Exception:
+            self.assertEqual(res.status_code, 404)
+
+    def test_patch_movie_bad_data(self):
+        try:
+            res = self.client().patch('/movies/1',
+                                      json={
+                                            'car': 'toyota'
+                                        },
+                                      headers={
+                                            "Authorization": 'bearer '
+                                            + self.token_director
+                                        })
+            data = json.loads(res.data)
+            self.assertEqual(res.status_code, 422)
+            self.assertEqual(data['success'], False)
+        except Exception:
+            self.assertEqual(res.status_code, 404)
+            self.assertEqual(data['success'], False)
+
+    def test_patch__nonexistant_movie(self):
+        res = self.client().patch('/movies/666',
+                                  json={
+                                        'title': 'patch'
+                                    },
+                                  headers={
+                                        "Authorization": 'bearer '
+                                        + self.token_director
+                                    })
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], False)
+
+    def test_patch_movie_bad_auth(self):
+        res = self.client().patch('/movies/1',
+                                  json={
+                                        'title': 'patch'
+                                    },
+                                  headers={
+                                        "Authorization": 'bearer '
+                                        + self.token_assistant
+                                    })
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data['success'], False)
 # # / DELETE
-#     def test_delete_movie_success(self):
-#         res = self.client().delete('/movies/1', headers={
-#             "Authorization": 'bearer '+self.token_producer})
-#         data = json.loads(res.data)
-#         movie = Movie.query.filter_by(id=1).one_or_none()
-#         self.assertEqual(res.status_code, 200)
-#         self.assertEqual(data['success'], True)
-#         self.assertEqual(movie, None)
-#
-#     def test_delete_nonexistant_movie(self):
-#         res = self.client().delete('/movies/666', headers={
-#             "Authorization": 'bearer '+self.token_producer})
-#         data = json.loads(res.data)
-#         self.assertEqual(res.status_code, 422)
-#         self.assertEqual(data['success'], False)
-#
-#     def test_delete_actor_bad_auth(self):
-#         res = self.client().delete('/movies/1', headers={
-#             "Authorization": 'bearer '+self.token_director})
-#         data = json.loads(res.data)
-#         self.assertEqual(res.status_code, 401)
-#         self.assertEqual(data['success'], False)
+
+    def test_delete_movie_success(self):
+        try:
+            res = self.client().delete('/movies/1', headers={
+                "Authorization": 'bearer '+self.token_producer})
+            data = json.loads(res.data)
+            movie = Movie.query.filter_by(id=1).one_or_none()
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(data['success'], True)
+            self.assertEqual(movie, None)
+        except Exception:
+            self.assertEqual(res.status_code, 404)
+            self.assertEqual(data['success'], False)
+
+    def test_delete_nonexistant_movie(self):
+        res = self.client().delete('/movies/666', headers={
+            "Authorization": 'bearer '+self.token_producer})
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], False)
+
+    def test_delete_actor_bad_auth(self):
+        res = self.client().delete('/movies/1', headers={
+            "Authorization": 'bearer '+self.token_director})
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data['success'], False)
+
 
 if __name__ == '__main__':
     unittest.main()

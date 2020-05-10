@@ -7,7 +7,6 @@ from jose import jwt
 from urllib.request import urlopen
 
 
-
 AUTH0_DOMAIN = os.environ['AUTH0_DOMAIN']
 ALGORITHMS = os.environ['ALGORITHMS']
 API_AUDIENCE = os.environ['API_AUDIENCE']
@@ -67,7 +66,8 @@ def check_permissions(permission, payload):
                         'code': 'invalid_claims',
                         'description': 'Permissions not included in JWT.'
                         }, 400)
-# raise an AuthError if the requested permission string is not in the payload permissions array
+# raise an AuthError if the requested permission
+# string is not in the payload permissions array
     if permission not in payload['permissions']:
         raise AuthError({
             'code': 'unauthorized',
